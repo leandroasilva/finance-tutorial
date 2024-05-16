@@ -1,21 +1,47 @@
 "use client";
 
-import { ColumnDef } from "@tanstack/react-table";
+import { InferResponseType } from "hono";
 import { ArrowUpDown, MoreHorizontal } from "lucide-react";
+import { ColumnDef } from "@tanstack/react-table";
 
+import { client } from "@/lib/hono";
+import { Button } from "@/components/ui/button";
+import { Checkbox } from "@/components/ui/checkbox";
 
-export type Account = {
-    id: string;
-    name: string;
-};
+export type ResponseType = InferResponseType<typeof client.api.accounts.$get, 200>["data"][0];
 
-export const columns: ColumnDef<Account>[] = [
+export const columns: ColumnDef<ResponseType>[] = [
     {
-        accessorKey: "id",
-        header: "ID",
+        id: "select",
+        header: ({ table }) => (
+            <Checkbox
+                checked={table.getIsAllRowsSelected() || (table.getIsSomePageRowsSelected() && "indeterminate")}
+                onCheckedChange={(value) => table.toggleAllRowsSelected(!!value)}
+                aria-label="Select all"
+            />
+        ),
+        cell: ({ row }) => (
+            <Checkbox
+                checked={row.getIsSelected()}
+                onCheckedChange={(value) => row.toggleSelected(!!value)}
+                aria-label="Select row"
+            />
+        ),
+        enableSorting: false,
+        enableHiding: false,
     },
     {
         accessorKey: "name",
-        header: "Name",
+        header: ({ column }) => {
+            return (
+                <Button
+                    variant="ghost"
+                    onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
+                >
+                    Name
+                    <ArrowUpDown className="ml-2 h-4 w-4" />
+                </Button>
+            );
+        },
     },
 ]
